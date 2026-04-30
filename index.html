@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>INKWELL — Modern Blog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #111118;
+      --bg3: #1a1a26;
+      --card: #13131e;
+      --border: #2a2a3d;
+      --text: #e8e8f0;
+      --muted: #7a7a9a;
+      --accent: #ff5f3d;
+      --accent2: #f0c040;
+      --accent3: #5de0b0;
+      --link: #a78bfa;
+      --shadow: 0 8px 40px rgba(0,0,0,0.6);
+    }
+    [data-theme="light"] {
+      --bg: #f5f4ef;
+      --bg2: #eceae0;
+      --bg3: #e2dfd4;
+      --card: #ffffff;
+      --border: #d5d0c0;
+      --text: #1a1a2e;
+      --muted: #7a7060;
+      --accent: #e04020;
+      --accent2: #c89010;
+      --accent3: #208a60;
+      --link: #6d28d9;
+      --shadow: 0 8px 40px rgba(0,0,0,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5vw;
+      height: 64px;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s;
+    }
+    [data-theme="light"] nav { background: rgba(245,244,239,0.9); }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .logo span { color: var(--text); }
+
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+
+    #theme-toggle {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: grid; place-items: center;
+      transition: all 0.2s;
+    }
+    #theme-toggle:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      padding: 100px 5vw 80px;
+      overflow: hidden;
+    }
+    .hero-eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+      opacity: 0; animation: fadeUp 0.6s 0.1s forwards;
+    }
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 9vw, 8rem);
+      line-height: 0.92;
+      letter-spacing: 0.04em;
+      margin-bottom: 24px;
+      opacity: 0; animation: fadeUp 0.6s 0.2s forwards;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent); font-family: 'DM Serif Display', serif; }
+    .hero-sub {
+      max-width: 500px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      opacity: 0; animation: fadeUp 0.6s 0.35s forwards;
+    }
+    .hero-deco {
+      position: absolute; right: -60px; top: 20px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22vw;
+      color: var(--bg3);
+      letter-spacing: -0.06em;
+      user-select: none; pointer-events: none;
+      opacity: 0.5;
+    }
+
+    /* ── SEARCH + FILTERS ── */
+    .controls {
+      padding: 0 5vw 48px;
+      display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+    }
+    .search-wrap {
+      flex: 1; min-width: 240px;
+      position: relative;
+    }
+    .search-wrap svg {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); pointer-events: none;
+    }
+    #search {
+      width: 100%;
+      padding: 12px 16px 12px 42px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,95,61,0.15); }
+    #search::placeholder { color: var(--muted); }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filter-btn {
+      padding: 9px 20px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { color: var(--text); border-color: var(--text); }
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(255,95,61,0.35);
+    }
+
+    /* ── GRID ── */
+    .grid-section { padding: 0 5vw 80px; }
+    .section-header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; letter-spacing: 0.06em;
+    }
+    #post-count { font-size: 0.85rem; color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      position: relative;
+      animation: fadeUp 0.5s both;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow);
+      border-color: var(--accent);
+    }
+    .card-img {
+      width: 100%; height: 200px; object-fit: cover;
+      display: block;
+      transition: transform 0.4s;
+    }
+    .card:hover .card-img { transform: scale(1.04); }
+    .card-img-wrap { overflow: hidden; position: relative; }
+    .card-category {
+      position: absolute; top: 12px; left: 12px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: #fff;
+    }
+    .card-body { padding: 20px; }
+    .card-meta {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 0.78rem; color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .card-meta span { display: flex; align-items: center; gap: 4px; }
+    .card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      line-height: 1.35;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    .card-excerpt { font-size: 0.88rem; color: var(--muted); line-height: 1.65; margin-bottom: 16px; }
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .read-btn {
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .card:hover .read-btn { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .like-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 1.1rem; color: var(--muted);
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    .like-btn:hover, .like-btn.liked { color: #ff5f3d; }
+    .like-btn.liked .heart { animation: heartPop 0.35s; }
+
+    /* ── FEATURED CARD ── */
+    .featured-card {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .featured-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--accent); }
+    .featured-card .card-img { height: 100%; min-height: 280px; }
+    .featured-card .card-body { padding: 36px; display: flex; flex-direction: column; justify-content: center; }
+    .featured-card .card-title { font-size: 1.8rem; }
+    .featured-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--accent2);
+      margin-bottom: 14px;
+    }
+    .featured-label::before { content: '★'; font-size: 0.8rem; }
+
+    /* ── NO RESULTS ── */
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+    .no-results h3 { font-family: 'DM Serif Display', serif; font-size: 2rem; margin-bottom: 8px; color: var(--text); }
+
+    /* ── POST VIEW ── */
+    #post-view {
+      display: none;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 60px 5vw 100px;
+      animation: fadeUp 0.4s both;
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 999px; padding: 8px 18px;
+      color: var(--text); cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+      transition: all 0.2s; margin-bottom: 40px;
+    }
+    .back-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .post-category-badge {
+      display: inline-block;
+      padding: 5px 14px; border-radius: 999px;
+      background: var(--accent); color: #fff;
+      font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .post-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.15; margin-bottom: 20px;
+    }
+    .post-meta {
+      display: flex; flex-wrap: wrap; gap: 20px;
+      color: var(--muted); font-size: 0.85rem;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 36px;
+    }
+    .post-meta span { display: flex; align-items: center; gap: 6px; }
+    .post-hero-img {
+      width: 100%; border-radius: 16px;
+      margin-bottom: 40px; max-height: 420px; object-fit: cover;
+    }
+    .post-content { font-size: 1.05rem; line-height: 1.85; color: var(--text); }
+    .post-content p { margin-bottom: 22px; }
+    .post-content h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem; margin: 36px 0 16px;
+      color: var(--accent);
+    }
+    .post-content h3 { font-size: 1.2rem; margin: 28px 0 12px; font-weight: 600; }
+    .post-content blockquote {
+      border-left: 3px solid var(--accent);
+      padding: 12px 20px;
+      margin: 28px 0;
+      background: var(--bg3);
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      color: var(--muted);
+    }
+    .post-content code {
+      background: var(--bg3); padding: 2px 7px; border-radius: 5px;
+      font-size: 0.9em; color: var(--accent3);
+    }
+    .post-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 48px; }
+    .post-tag {
+      padding: 5px 14px; border-radius: 999px;
+      background: var(--bg3); border: 1px solid var(--border);
+      font-size: 0.78rem; color: var(--muted);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 5vw;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+      color: var(--muted); font-size: 0.82rem;
+    }
+    .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--accent); letter-spacing: 0.1em; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heartPop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.5); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      .featured-card { grid-template-columns: 1fr; }
+      .featured-card .card-img { height: 200px; }
+      .hero h1 { line-height: 0.95; }
+      .hero-deco { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#" onclick="showHome()">INK<span>WELL</span></a>
+  <div class="nav-right">
+    <button id="theme-toggle" title="Toggle theme" onclick="toggleTheme()">🌙</button>
+  </div>
+</nav>
+
+<!-- HOME VIEW -->
+<div id="home-view">
+  <section class="hero">
+    <p class="hero-eyebrow">📰 Stories Worth Reading</p>
+    <h1>Where <em>Ideas</em><br>Come to Life</h1>
+    <p class="hero-sub">Explore deep dives into technology, creative lifestyle, and the news that shapes our world — curated with intention.</p>
+    <div class="hero-deco">BLOG</div>
+  </section>
+
+  <section class="controls">
+    <div class="search-wrap">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <input type="text" id="search" placeholder="Search articles…" oninput="renderPosts()">
+    </div>
+    <div class="filters" id="filters"></div>
+  </section>
+
+  <section class="grid-section">
+    <div class="section-header">
+      <h2 class="section-title">Latest Posts</h2>
+      <span id="post-count"></span>
+    </div>
+    <div class="grid" id="post-grid"></div>
+  </section>
+</div>
+
+<!-- POST VIEW -->
+<div id="post-view">
+  <button class="back-btn" onclick="showHome()">← Back to Posts</button>
+  <div id="post-content-area"></div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">INKWELL</span>
+  <span>© 2025 Inkwell Blog. Crafted with ❤️</span>
+  <span>Made with vanilla JS · No frameworks</span>
+</footer>
+
+<script>
+// ── DATA ──
+const posts = [
+  {
+    id: 1, featured: true,
+    title: "The Architecture of Modern AI: How Large Language Models Actually Think",
+    excerpt: "A deep dive into transformer architecture, attention mechanisms, and why these models surprise us — even their creators.",
+    category: "Tech",
+    date: "Apr 28, 2025", readTime: "9 min read",
+    likes: 214,
+    image: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=800&q=80",
+    tags: ["AI", "Machine Learning", "Deep Dive"],
+    content: `
+      <p>Large Language Models have taken the world by storm, but most explanations stop at the surface. Let's go deeper — all the way into the architecture that makes them work.</p>
+      <h2>The Transformer Revolution</h2>
+      <p>In 2017, a paper titled <em>"Attention Is All You Need"</em> quietly changed the course of AI history. The transformer architecture it introduced abandoned recurrent neural networks entirely, replacing them with a mechanism called <strong>self-attention</strong>.</p>
+      <blockquote>"The model learns which words to pay attention to when processing any given word — and it does this simultaneously for every word in the sequence."</blockquote>
+      <h2>Attention Mechanisms Explained</h2>
+      <p>Imagine reading the sentence: <em>"The trophy didn't fit in the suitcase because it was too big."</em> What does "it" refer to? To figure that out, your brain does something remarkably similar to attention — it looks back at context and assigns weights to relevant words.</p>
+      <p>Transformers do exactly this using three vectors per token: <code>Query</code>, <code>Key</code>, and <code>Value</code>. The dot product between Q and K determines how much attention each token pays to every other token. The result, passed through a softmax, becomes a set of weights applied to the V vectors.</p>
+      <h2>Why Scale Matters</h2>
+      <p>The emergent capabilities of large models — reasoning, code generation, humor — weren't explicitly programmed. They arose from scale: more parameters, more data, more compute. This is simultaneously the most exciting and unsettling aspect of modern AI.</p>
+      <h3>What Comes Next</h3>
+      <p>The field is now exploring sparse models, mixture-of-experts, and hybrid architectures that blend symbolic reasoning with neural networks. The next breakthrough might not be about scale at all — it might be about efficiency.</p>
+      <p>Whatever comes next, understanding the foundations gives you the lens to evaluate claims critically, spot hype, and appreciate genuine progress.</p>
+    `
+  },
+  {
+    id: 2,
+    title: "Slow Mornings: The Ritual That Changed My Creative Output",
+    excerpt: "How ditching the 5AM productivity grind and embracing intentional slowness unlocked months of creative work.",
+    category: "Lifestyle",
+    date: "Apr 24, 2025", readTime: "5 min read",
+    likes: 388,
+    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
+    tags: ["Creativity", "Morning Routine", "Wellness"],
+    content: `
+      <p>I used to set my alarm for 5AM. I'd read the productivity threads, watch the YouTube videos, and convince myself that willpower alone could reshape a night owl into a morning person. It couldn't.</p>
+      <h2>The Grind Culture Trap</h2>
+      <p>Hustle culture sells a specific image: cold showers, journaling, workouts, deep work — all before sunrise. For some, this is genuine. For many, it's a performance that leads to burnout dressed up as discipline.</p>
+      <blockquote>"The most creative people I know don't optimize their mornings. They protect them."</blockquote>
+      <h2>What Slow Mornings Actually Look Like</h2>
+      <p>I wake up without an alarm (when possible). I make coffee slowly — grinding beans by hand, watching water bloom through a pour-over. No phone for the first 40 minutes. Sometimes I sketch. Sometimes I just sit.</p>
+      <p>The key insight: creative work isn't something you do when everything else is handled. It's something you prioritize before everything else has a chance to crowd in.</p>
+      <h2>The Output Paradox</h2>
+      <p>In the three months since adopting this ritual, I've shipped more meaningful work than in the previous year of aggressive productivity systems. Fewer tasks, more depth. Less urgency, more presence.</p>
+      <p>Your best ideas don't come when you're grinding. They come in the quiet spaces you're brave enough to protect.</p>
+    `
+  },
+  {
+    id: 3,
+    title: "Open Source Is Eating the AI Industry — And That's a Good Thing",
+    excerpt: "Meta's Llama, Mistral, and a wave of community models are reshaping who controls the future of AI.",
+    category: "Tech",
+    date: "Apr 20, 2025", readTime: "7 min read",
+    likes: 176,
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",
+    tags: ["Open Source", "AI", "Tech Policy"],
+    content: `
+      <p>For a brief moment, it looked like AI would be locked behind proprietary walls forever. Then the open-source community showed up.</p>
+      <h2>The Democratization Wave</h2>
+      <p>When Meta released the weights for Llama, it didn't just release a model — it released a foundation. Within weeks, the community had fine-tuned it for medicine, law, coding, and dozens of other domains. The genie was out of the bottle.</p>
+      <h2>Why Openness Wins</h2>
+      <p>Open models enable transparency. Researchers can audit training data, probe for biases, and understand failure modes. The "black box" critique of AI becomes far less applicable when the weights are public and the methodology is documented.</p>
+      <blockquote>"When you can inspect the model, you can trust it. Or at least, you can make an informed decision about whether to trust it."</blockquote>
+      <h2>The Counter-Arguments</h2>
+      <p>Critics raise real concerns: open weights lower the barrier for misuse. A model fine-tuned to remove safety guardrails is a genuine risk. The debate isn't settled, and it shouldn't be — it deserves serious ongoing attention.</p>
+      <p>But the trajectory is clear. Open-source AI is not a trend — it's an infrastructure shift as significant as the open web itself.</p>
+    `
+  },
+  {
+    id: 4,
+    title: "The New Rules of Remote Work in 2025",
+    excerpt: "Three years after the great reshuffling, what do we actually know about distributed teams, async culture, and the office?",
+    category: "News",
+    date: "Apr 17, 2025", readTime: "6 min read",
+    likes: 143,
+    image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=80",
+    tags: ["Remote Work", "Future of Work", "Productivity"],
+    content: `
+      <p>The pandemic forced a global experiment in remote work. Now, with years of data and lived experience behind us, the picture is more nuanced than either "remote is dead" or "offices are obsolete."</p>
+      <h2>What the Data Shows</h2>
+      <p>Hybrid arrangements consistently outperform both extremes in employee satisfaction surveys. But "hybrid" means different things to different organizations — and that ambiguity is itself a management challenge.</p>
+      <h2>The Async Advantage</h2>
+      <p>The highest-performing distributed teams share one trait: they've mastered async communication. Written documentation, recorded demos, and clear decision logs replace the ambient knowledge that used to live in hallway conversations.</p>
+      <blockquote>"Async doesn't mean slower — it means thoughtful. A well-written message beats a 30-minute meeting most of the time."</blockquote>
+      <h2>What's Next</h2>
+      <p>The return-to-office mandates of 2024 revealed a power struggle more than a productivity insight. The companies winning talent in 2025 are those offering genuine flexibility, not the illusion of it.</p>
+    `
+  },
+  {
+    id: 5,
+    title: "Design Systems Are Developer Tools Too",
+    excerpt: "Why the best design systems aren't just for designers — and how to build one that engineers actually love.",
+    category: "Tech",
+    date: "Apr 14, 2025", readTime: "8 min read",
+    likes: 297,
+    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
+    tags: ["Design", "Engineering", "UI Systems"],
+    content: `
+      <p>Design systems have a reputation problem. Too often they're seen as a designer's artifact — a Figma library of components that developers then have to interpret, approximate, or argue about.</p>
+      <h2>The Translation Tax</h2>
+      <p>Every time a design is handed off without a corresponding implementation, there's friction. Developers make judgment calls. Designs drift. The system fractures. The solution isn't better handoff — it's eliminating handoff entirely.</p>
+      <h2>Building for Both</h2>
+      <p>A true design system lives in code first. Tokens — spacing, color, typography — are defined once and consumed everywhere: in design tools via plugins, in code via CSS variables or JS objects. The source of truth is singular.</p>
+      <blockquote>"When a designer changes a color token, it should propagate to production automatically. That's not a dream — it's achievable today."</blockquote>
+      <h2>Developer Experience as a First-Class Concern</h2>
+      <p>The best design systems I've worked with have excellent documentation written by engineers, for engineers. They include usage examples, anti-patterns, accessibility notes, and testing utilities.</p>
+      <p>If your design system doesn't have a changelog, a versioning strategy, and a migration guide, it's not a system — it's a suggestion.</p>
+    `
+  },
+  {
+    id: 6,
+    title: "Finding Flow in a World Built for Distraction",
+    excerpt: "The science of deep concentration — and a practical framework for protecting it in an age of infinite interruption.",
+    category: "Lifestyle",
+    date: "Apr 10, 2025", readTime: "6 min read",
+    likes: 502,
+    image: "https://images.unsplash.com/photo-1512314889357-e157c22f938d?w=800&q=80",
+    tags: ["Focus", "Psychology", "Deep Work"],
+    content: `
+      <p>Mihaly Csikszentmihalyi described flow as a state of complete absorption — where skill meets challenge, time dissolves, and the self disappears into the work. It's the most productive and fulfilling state a human can occupy.</p>
+      <h2>Why It's Getting Harder</h2>
+      <p>The attention economy is explicitly designed to interrupt you. Every notification, every badge, every pull-to-refresh mechanism is an engineered hook that pulls you out of depth and into the shallows.</p>
+      <blockquote>"We are voluntarily installing distraction machines on our desks, then wondering why we can't concentrate."</blockquote>
+      <h2>The Flow Conditions</h2>
+      <p>Research identifies four preconditions: clear goals, immediate feedback, a challenge that slightly exceeds current skill, and a sense of control. Most knowledge work fails on at least two of these — especially feedback and challenge calibration.</p>
+      <h2>A Practical Framework</h2>
+      <p>Block 90-minute deep work sessions with hard start and stop times. Use a physical notebook for goals before opening a computer. Treat context-switching as the productivity killer it is — it takes an average of 23 minutes to fully regain focus after an interruption.</p>
+      <p>Flow isn't mystical. It's a skill, and like all skills, it improves with deliberate practice and the right environment.</p>
+    `
+  },
+  {
+    id: 7,
+    title: "Climate Tech's Breakthrough Year: What Actually Changed",
+    excerpt: "Beyond the headlines — which clean energy technologies crossed meaningful cost and scale thresholds in 2024.",
+    category: "News",
+    date: "Apr 5, 2025", readTime: "7 min read",
+    likes: 189,
+    image: "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&q=80",
+    tags: ["Climate", "Energy", "Innovation"],
+    content: `
+      <p>2024 was a year of genuine milestones in climate technology — not the breathless hype of "this changes everything," but the quieter, more significant kind: cost curves crossing thresholds, scale-ups proving viability, and policy aligning with deployment.</p>
+      <h2>Solar Crosses Another Floor</h2>
+      <p>Utility-scale solar is now the cheapest electricity source in history, in most markets. The learning curve — a 20% cost reduction for every doubling of cumulative capacity — has held for decades and shows no sign of flattening.</p>
+      <h2>Battery Storage Goes Long</h2>
+      <p>The missing piece for variable renewables has always been storage. In 2024, several grid-scale iron-air battery projects came online, offering 100+ hour storage at costs that make them economically competitive with gas peaker plants.</p>
+      <blockquote>"The energy transition is no longer a question of technology or economics. It's a question of speed."</blockquote>
+      <h2>The Hard Parts Remain Hard</h2>
+      <p>Steel, cement, shipping, and aviation account for roughly 30% of global emissions and resist electrification. Progress here is real but slower — green hydrogen, direct reduction, and synthetic fuels are all advancing but haven't yet hit the cost curves that solar and wind did.</p>
+    `
+  },
+  {
+    id: 8,
+    title: "The Minimalist Home Office: Less Gear, Better Work",
+    excerpt: "I stripped my workspace down to seven items. Here's what stayed, what went, and what surprised me.",
+    category: "Lifestyle",
+    date: "Mar 30, 2025", readTime: "4 min read",
+    likes: 421,
+    image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=800&q=80",
+    tags: ["Minimalism", "Workspace", "Productivity"],
+    content: `
+      <p>The home office arms race is real. Standing desks, ultrawide monitors, mechanical keyboards, ambient lighting, webcam upgrades — each purchase justified by some marginal productivity gain that rarely materializes.</p>
+      <h2>The Experiment</h2>
+      <p>I spent a month removing one item from my workspace each week. No item returned unless its absence clearly hurt my work. After four weeks, I had a laptop, a single external monitor, a decent chair, good lighting, and noise-canceling headphones.</p>
+      <h2>What I Learned</h2>
+      <p>The gear never was the problem. Attention was the problem. A cluttered desk is a symptom of a cluttered mind — and buying a new cable management system doesn't address the underlying issue.</p>
+      <blockquote>"Constraints clarify. When you can't reach for another tool, you have to use the one you have — better."</blockquote>
+      <h2>The Seven Items</h2>
+      <p>Laptop, external monitor, wireless mouse, notebook + pen, quality chair, good lamp, and headphones. Everything else is optional. Try removing one thing this week — you might be surprised what you don't miss.</p>
+    `
+  }
+];
+
+const categories = ['All', ...new Set(posts.map(p => p.category))];
+let activeCategory = 'All';
+const liked = {};
+
+// ── INIT ──
+function init() {
+  // Filters
+  const f = document.getElementById('filters');
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (cat === 'All' ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => {
+      activeCategory = cat;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPosts();
+    };
+    f.appendChild(btn);
+  });
+  renderPosts();
+}
+
+// ── RENDER ──
+function renderPosts() {
+  const query = document.getElementById('search').value.toLowerCase();
+  const grid = document.getElementById('post-grid');
+  grid.innerHTML = '';
+
+  const filtered = posts.filter(p => {
+    const matchCat = activeCategory === 'All' || p.category === activeCategory;
+    const matchQ = p.title.toLowerCase().includes(query) || p.excerpt.toLowerCase().includes(query);
+    return matchCat && matchQ;
+  });
+
+  document.getElementById('post-count').textContent = `${filtered.length} article${filtered.length !== 1 ? 's' : ''}`;
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="no-results"><h3>No results found</h3><p>Try a different search or category.</p></div>`;
+    return;
+  }
+
+  filtered.forEach((post, i) => {
+    const el = document.createElement('div');
+    el.className = post.featured && i === 0 ? 'card featured-card' : 'card';
+    el.style.animationDelay = `${i * 0.07}s`;
+    el.innerHTML = post.featured && i === 0 ? featuredCardHTML(post) : cardHTML(post);
+    el.querySelector('.read-btn').onclick = (e) => { e.stopPropagation(); openPost(post.id); };
+    el.querySelector('.like-btn').onclick = (e) => { e.stopPropagation(); toggleLike(post.id, el); };
+    el.onclick = () => openPost(post.id);
+    grid.appendChild(el);
+    if (liked[post.id]) el.querySelector('.like-btn').classList.add('liked');
+  });
+}
+
+function cardHTML(p) {
+  return `
+    <div class="card-img-wrap">
+      <img class="card-img" src="${p.image}" alt="${p.title}" loading="lazy">
+      <span class="card-category">${p.category}</span>
+    </div>
+    <div class="card-body">
+      <div class="card-meta">
+        <span>📅 ${p.date}</span>
+        <span>⏱ ${p.readTime}</span>
+      </div>
+      <h3 class="card-title">${p.title}</h3>
+      <p class="card-excerpt">${p.excerpt}</p>
+      <div class="card-footer">
+        <button class="read-btn">Read More →</button>
+        <button class="like-btn"><span class="heart">♥</span> ${(liked[p.id] ? p.likes + 1 : p.likes)}</button>
+      </div>
+    </div>
+  `;
+}
+
+function featuredCardHTML(p) {
+  return `
+    <div class="card-img-wrap">
+      <img class="card-img" src="${p.image}" alt="${p.title}" loading="lazy">
+    </div>
+    <div class="card-body">
+      <div class="featured-label">Featured Story</div>
+      <span class="card-category" style="margin-bottom:14px;display:inline-block">${p.category}</span>
+      <div class="card-meta">
+        <span>📅 ${p.date}</span>
+        <span>⏱ ${p.readTime}</span>
+      </div>
+      <h3 class="card-title">${p.title}</h3>
+      <p class="card-excerpt">${p.excerpt}</p>
+      <div class="card-footer">
+        <button class="read-btn">Read More →</button>
+        <button class="like-btn"><span class="heart">♥</span> ${(liked[p.id] ? p.likes + 1 : p.likes)}</button>
+      </div>
+    </div>
+  `;
+}
+
+// ── LIKE ──
+function toggleLike(id, card) {
+  liked[id] = !liked[id];
+  const btn = card.querySelector('.like-btn');
+  btn.classList.toggle('liked', liked[id]);
+  const post = posts.find(p => p.id === id);
+  btn.innerHTML = `<span class="heart">♥</span> ${liked[id] ? post.likes + 1 : post.likes}`;
+}
+
+// ── POST VIEW ──
+function openPost(id) {
+  const post = posts.find(p => p.id === id);
+  document.getElementById('home-view').style.display = 'none';
+  const pv = document.getElementById('post-view');
+  pv.style.display = 'block';
+  document.getElementById('post-content-area').innerHTML = `
+    <span class="post-category-badge">${post.category}</span>
+    <h1 class="post-title">${post.title}</h1>
+    <div class="post-meta">
+      <span>📅 ${post.date}</span>
+      <span>⏱ ${post.readTime}</span>
+      <span>♥ ${post.likes} likes</span>
+    </div>
+    <img class="post-hero-img" src="${post.image}" alt="${post.title}">
+    <div class="post-content">${post.content}</div>
+    <div class="post-tags">${post.tags.map(t => `<span class="post-tag">#${t}</span>`).join('')}</div>
+  `;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showHome() {
+  document.getElementById('home-view').style.display = 'block';
+  document.getElementById('post-view').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── THEME ──
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-toggle').textContent = isDark ? '🌙' : '☀️';
+}
+
+init();
+</script>
+</body>
+</html>
